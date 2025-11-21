@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rice Yield Prediction</title>
+    <link rel="stylesheet" href="UI.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>🌾 Rice Yield Prediction System</h1>
+        <p class="subtitle">Enter fertilizer requirements to predict rice yield</p>
+
+        <div class="card">
+            <form id="predictionForm">
+                <div class="form-group">
+                    <label for="model_type">Select Model:</label>
+                    <select id="model_type" name="model_type" required>
+                        <option value="sklearn">Scikit-Learn Linear Regression</option>
+                        <option value="scratch">SGD Regressor (From Scratch)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="n_req">Nitrogen Requirement (kg/ha):</label>
+                    <input type="number" id="n_req" name="n_req" step="0.01" required placeholder="e.g., 120.5">
+                </div>
+
+                <div class="form-group">
+                    <label for="p_req">Phosphorus Requirement (kg/ha):</label>
+                    <input type="number" id="p_req" name="p_req" step="0.01" required placeholder="e.g., 60.3">
+                </div>
+
+                <div class="form-group">
+                    <label for="k_req">Potassium Requirement (kg/ha):</label>
+                    <input type="number" id="k_req" name="k_req" step="0.01" required placeholder="e.g., 40.2">
+                </div>
+
+                <button type="submit" class="btn-predict">Predict Yield</button>
+            </form>
+        </div>
+
+        <div id="result" class="result hidden">
+            <h2>Prediction Result</h2>
+            <div class="result-content">
+                <p><strong>Model Used:</strong> <span id="model-used"></span></p>
+                <p><strong>Predicted Yield:</strong> <span id="prediction" class="prediction-value"></span> kg/ha</p>
+            </div>
+        </div>
+
+        <div id="error" class="error hidden">
+            <p id="error-message"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Get form values
+            const formData = {
+                model_type: document.getElementById('model_type').value,
+                n_req: document.getElementById('n_req').value,
+                p_req: document.getElementById('p_req').value,
+                k_req: document.getElementById('k_req').value
+            };
+
+            // Hide previous results/errors
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Display result
+                    document.getElementById('model-used').textContent = data.model_used;
+                    document.getElementById('prediction').textContent = data.prediction;
+                    document.getElementById('result').classList.remove('hidden');
+                } else {
+                    // Display error
+                    document.getElementById('error-message').textContent = 'Error: ' + data.error;
+                    document.getElementById('error').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('error-message').textContent = 'Error: ' + error.message;
+                document.getElementById('error').classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+
+</html>
